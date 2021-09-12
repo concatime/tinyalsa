@@ -5,16 +5,16 @@
 #   Project configuration variables
 #
 # -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-VERSION_FILE="include/tinyalsa/version.h"
-CHANGELOG_FILE="debian/changelog"
+VERSION_FILE='include/tinyalsa/version.h'
+CHANGELOG_FILE='debian/changelog'
 
 # -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 #
 #   Scripts internal variables
 #
 # -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
-LF="\n"
-PARAMS=""
+LF='\n'
+PARAMS=''
 DRYRUN=0
 
 # -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
@@ -24,33 +24,33 @@ DRYRUN=0
 # -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 die()
 {
-  echo "Error: $@" 1>&2
+  echo "Error: ${@}" 1>&2
   exit 1
 }
 
 print_usage()
 {
   echo
-  echo "Usage: $0 [OPTIONS] ACTION"
+  echo "Usage: ${0} [OPTIONS] ACTION"
   echo
-  echo "Available options:"
-  echo "  -s,--script   Format output in \"script\" mode (no trailing newline)."
-  echo "  -d,--dry-run  Does not commit anything to any file, just prints."
+  echo 'Available options:'
+  echo '  -s,--script   Format output in \"script\" mode (no trailing newline).'
+  echo '  -d,--dry-run  Does not commit anything to any file, just prints.'
   echo
-  echo "Available actions:"
-  echo "  print   [minor|major|patch]  Print the current version."
-  echo "  release [minor|major|patch]  Bump the specified version part"
-  echo "  check                        Check the changelog latest released"
-  echo "                               version against the version file."
+  echo 'Available actions:'
+  echo '  print   [minor|major|patch]  Print the current version.'
+  echo '  release [minor|major|patch]  Bump the specified version part'
+  echo '  check                        Check the changelog latest released'
+  echo '                               version against the version file.'
   echo
-  echo "Please run this script from the project root folder."
+  echo 'Please run this script from the project root folder.'
   echo
 }
 
 check_files()
 {
-  [ -f ${VERSION_FILE}   ] || die "No ${VERSION_FILE} found!";
-  [ -f ${CHANGELOG_FILE} ] || die "No ${CHANGELOG_FILE} found!"
+  test -f "$VERSION_FILE"   || die "No ${VERSION_FILE} found!";
+  test -f "$CHANGELOG_FILE" || die "No ${CHANGELOG_FILE} found!"
 }
 
 # Gets a part of the version from the project version file (version.h).
@@ -60,8 +60,8 @@ get_version_part()
 {
   set -- "$1" "$(grep -m 1 "^#define\([ \t]*\)$1" ${VERSION_FILE} | sed 's/[^0-9]*//g')"
 
-  if [ -z "$2" ]; then
-    die "Could not get $1 from ${VERSION_FILE}"
+  if test -z "$2"; then
+    die "Could not get ${1} from ${VERSION_FILE}"
   fi
 
   echo "$2"
@@ -82,14 +82,14 @@ get_version()
 #   new version number. If no arguments, do nothing.
 commit_version_part()
 {
-  if [ -z $1 ] || [ -z $2 ]; then
+  if test -z "$1" || test -z "$2"; then
     return 0
   fi
 
-  sed -i "s/\(^#define[ \t]*$1\)[ \t]*\([0-9]*\)/\1 $2/g" ${VERSION_FILE} \
-    || die "Could not commit version for $1";
+  sed -i "s/\(^#define[ \t]*${1}\)[ \t]*\([0-9]*\)/\1 ${2}/g" "$VERSION_FILE" \
+    || die "Could not commit version for ${1}";
 
-  [ $(get_version_part $1) = "$2" ] || die "Version check after commit failed for $1"
+  test $(get_version_part "$1") = "$2" || die "Version check after commit failed for ${1}"
 
   return 0;
 }
@@ -98,9 +98,9 @@ commit_version_part()
 # Takes three arguments, the new version numbers for major, minor and patch
 commit_version()
 {
-  commit_version_part "TINYALSA_VERSION_PATCH" $1
-  commit_version_part "TINYALSA_VERSION_MINOR" $2
-  commit_version_part "TINYALSA_VERSION_MAJOR" $3
+  commit_version_part "TINYALSA_VERSION_PATCH" "$1"
+  commit_version_part "TINYALSA_VERSION_MINOR" "$2"
+  commit_version_part "TINYALSA_VERSION_MAJOR" "$3"
 
   return 0
 }
@@ -112,7 +112,7 @@ commit_version()
 # -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 print_version()
 {
-  if [ -z $1 ]; then
+  if test -z "$1"; then
     printf "${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}${LF}"
   else
     case "$1" in
@@ -126,7 +126,7 @@ print_version()
         printf "${VERSION_PATCH}${LF}"
         ;;
       *)
-        die "Unknown part \"$1\" (must be one of minor, major and patch)."
+        die "Unknown part \"${1}\" (must be one of minor, major and patch)."
         ;;
     esac
   fi
@@ -154,7 +154,7 @@ bump_version()
     ;;
   esac
 
-  if [ ${DRYRUN} -ne 1 ]; then
+  if test "$DRYRUN" -ne 1; then
     commit_version ${VERSION_PATCH} ${VERSION_MINOR} ${VERSION_MAJOR}
   fi
 
@@ -169,11 +169,11 @@ check_version()
     "$(grep -m 1 "^tinyalsa (" ${CHANGELOG_FILE}| sed "s/[^0-9.]*//g")" \
     "${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}"
 
-  if [ "$1" != "$2" ]; then
-    die "Changelog version ($1) does not match package version ($2)."
+  if test "$1" != "$2"; then
+    die "Changelog version (${1}) does not match package version (${2})."
   fi
 
-  printf "Changelog version ($1) OK!${LF}"
+  printf "Changelog version (${1}) OK!${LF}"
   return 0
 }
 
@@ -184,7 +184,7 @@ check_version()
 # -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 parse_command()
 {
-  if [ "$#" -eq "0" ]; then
+  if test "$#" -eq 0; then
     print_usage
     exit 1
   fi
@@ -193,20 +193,20 @@ parse_command()
     print)
       get_version
       print_version "$2"
-      exit $?
+      exit "$?"
       ;;
     release)
       get_version
       bump_version "$2"
-      exit $?
+      exit "$?"
       ;;
     check)
       get_version
       check_version
-      exit $?
+      exit "$?"
       ;;
     *)
-      die "Unsupported action \"$1\"."
+      die "Unsupported action \"${1}\"."
       ;;
   esac
 }
@@ -221,12 +221,12 @@ set -e
 trap "set +e" 0
 
 # Checking parameters
-if [ "$#" -eq "0" ]; then
+if test "$#" -eq 0; then
   print_usage
   exit 0
 fi
 
-while [ "$#" -ne "0" ]; do
+while test "$#" -ne 0; do
   case "$1" in
     -s|--script)
       unset LF
@@ -241,20 +241,20 @@ while [ "$#" -ne "0" ]; do
       break
       ;;
     -*|--*=)
-      die "Unsupported flag \"$1\"."
+      die "Unsupported flag \"${1}\"."
       ;;
     *)
-      PARAMS="$PARAMS ${1}"
+      PARAMS="${PARAMS} ${1}"
       shift
       ;;
   esac
 done
 
 # set positional arguments in their proper place
-set -- "${PARAMS}"
+set -- "$PARAMS"
 
 check_files
-parse_command ${PARAMS}
+parse_command $PARAMS
 
 # The script should never reach this place.
-die "Internal error. Please report this."
+die 'Internal error. Please report this.'

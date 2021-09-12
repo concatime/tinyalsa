@@ -1,9 +1,8 @@
 #!/bin/sh
 
-set -e
-set -u
+set -eu
 
-ROOT=$(pwd)
+ROOT=$PWD
 
 make
 make clean
@@ -14,9 +13,9 @@ cmake ..
 cmake --build .
 cd ..
 
-$HOME/.local/bin/meson . meson-build
+"${HOME}/.local/bin/meson" . meson-build
 cd meson-build
 ninja
 cd ..
 
-${ROOT}/scripts/version.sh check
+"${ROOT}/scripts/version.sh" check
